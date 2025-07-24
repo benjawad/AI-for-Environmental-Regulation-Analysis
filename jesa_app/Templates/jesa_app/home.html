@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JESA - Automatisation des Registres Légaux EIE</title>
+    
+    <style>
+        :root {
+            --jesa-blue: #0056b3;
+            --jesa-orange: #ff6b35;
+            --jesa-green: #28a745;
+            --jesa-light: #f8f9fa;
+            --jesa-dark: #343a40;
+            
+            /* Light mode defaults */
+            --bg-color: #f5f7fa;
+            --text-color: #343a40;
+            --card-bg: white;
+            --card-shadow: 0 10px 30px rgba(0, 86, 179, 0.1);
+            --border-color: #e1e5ee;
+            --document-bg: #f9f9f9;
+            --header-border: rgba(0, 86, 179, 0.1);
+            --footer-border: rgba(0, 86, 179, 0.1);
+        }
+
+        /* Dark mode variables */
+        [data-theme="dark"] {
+            --bg-color: #121212;
+            --text-color: #e0e0e0;
+            --card-bg: #1e1e1e;
+            --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            --border-color: #333;
+            --document-bg: #252525;
+            --header-border: rgba(255, 255, 255, 0.1);
+            --footer-border: rgba(255, 255, 255, 0.1);
+            --jesa-blue: #4d9eff;
+            --jesa-orange: #ff8c66;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        
+        body {
+            background: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--header-border);
+        }
+        
+        .logo-container {
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo {
+            height: 60px;
+            margin-right: 1rem;
+        }
+        
+        .project-title {
+            font-size: 1.2rem;
+            color: var(--jesa-blue);
+            font-weight: 600;
+            margin-right: 1rem;
+        }
+        
+        .theme-toggle {
+            background: none;
+            border: none;
+            color: var(--text-color);
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 0.5rem;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .theme-toggle:hover {
+            background-color: rgba(0, 86, 179, 0.1);
+        }
+        
+        [data-theme="dark"] .theme-toggle:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .main-title {
+            text-align: center;
+            color: var(--jesa-blue);
+            margin: 2rem 0;
+            font-weight: 700;
+            font-size: 2.2rem;
+            position: relative;
+        }
+        
+        .main-title:after {
+            content: "";
+            display: block;
+            width: 100px;
+            height: 4px;
+            background: var(--jesa-orange);
+            margin: 0.5rem auto 0;
+            border-radius: 2px;
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+        
+        @media (max-width: 992px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            padding: 2rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 86, 179, 0.15);
+        }
+        
+        [data-theme="dark"] .card:hover {
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .card-title {
+            color: var(--jesa-blue);
+            font-size: 1.4rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .card-title i {
+            margin-right: 0.75rem;
+            font-size: 1.5rem;
+        }
+        
+        .card-badge {
+            background-color: var(--jesa-orange);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .text-area {
+            width: 100%;
+            min-height: 200px;
+            padding: 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            resize: vertical;
+            font-size: 1rem;
+            margin-bottom: 1.5rem;
+            transition: border 0.3s ease;
+            background-color: var(--card-bg);
+            color: var(--text-color);
+        }
+        
+        .text-area:focus {
+            outline: none;
+            border-color: var(--jesa-blue);
+            box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.2);
+        }
+        
+        .upload-area {
+            border: 2px dashed var(--border-color);
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+        
+        .upload-area:hover {
+            border-color: var(--jesa-blue);
+            background-color: rgba(0, 86, 179, 0.03);
+        }
+        
+        [data-theme="dark"] .upload-area:hover {
+            background-color: rgba(0, 86, 179, 0.1);
+        }
+        
+        .upload-area.active {
+            border-color: var(--jesa-green);
+            background-color: rgba(40, 167, 69, 0.05);
+        }
+        
+        [data-theme="dark"] .upload-area.active {
+            background-color: rgba(40, 167, 69, 0.1);
+        }
+        
+        .upload-area i {
+            font-size: 2.5rem;
+            color: var(--jesa-blue);
+            margin-bottom: 1rem;
+        }
+        
+        .upload-text {
+            color: var(--text-color);
+            margin-bottom: 0.5rem;
+        }
+        
+        .file-name {
+            color: var(--jesa-orange);
+            font-weight: 500;
+            margin-top: 1rem;
+            display: none;
+        }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.8rem 1.8rem;
+            border-radius: 50px;
+            font-weight: 600;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            font-size: 1rem;
+            gap: 0.5rem;
+        }
+        
+        .btn-primary {
+            background-color: var(--jesa-blue);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #004494;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 86, 179, 0.3);
+        }
+        
+        .btn-secondary {
+            background-color: var(--jesa-orange);
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #e05a2b;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 107, 53, 0.3);
+        }
+        
+        .btn-success {
+            background-color: var(--jesa-green);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .progress-container {
+            width: 100%;
+            background-color: #e9ecef;
+            border-radius: 50px;
+            margin: 1.5rem 0;
+            display: none;
+        }
+        
+        [data-theme="dark"] .progress-container {
+            background-color: #333;
+        }
+        
+        .progress-bar {
+            height: 10px;
+            border-radius: 50px;
+            background-color: var(--jesa-green);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .result-container {
+            margin-top: 2rem;
+            border-top: 1px solid var(--border-color);
+            padding-top: 1.5rem;
+            display: none;
+        }
+        
+        .preview-container {
+            margin-top: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            background-color: var(--document-bg);
+            min-height: 200px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .result-title {
+            color: var(--jesa-blue);
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+        
+        .document-preview {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: var(--document-bg);
+            min-height: 200px;
+        }
+        
+        .document-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .document-action {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .document-action:hover {
+            background-color: rgba(0, 86, 179, 0.1);
+        }
+        
+        [data-theme="dark"] .document-action:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 3rem;
+            color: #6c757d;
+            font-size: 0.9rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--footer-border);
+        }
+        
+        [data-theme="dark"] footer {
+            color: #aaa;
+        }
+        
+        /* Tooltip styles */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 200px;
+            background-color: #555;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.8rem;
+            font-weight: normal;
+        }
+        
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        /* Tabs for document types */
+        .tabs {
+            display: flex;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .tab {
+            padding: 0.75rem 1.5rem;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+            color: var(--text-color);
+        }
+        
+        .tab.active {
+            border-bottom-color: var(--jesa-blue);
+            color: var(--jesa-blue);
+            font-weight: 600;
+        }
+        
+        .tab:hover:not(.active) {
+            border-bottom-color: var(--border-color);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* Nouveaux styles pour l'upload de description */
+        .description-container {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .description-text {
+            flex: 1;
+        }
+        
+        .description-upload {
+            flex: 1;
+        }
+        
+        .description-divider {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin-bottom: 1.5rem;
+        }
+        
+        .description-divider::before,
+        .description-divider::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background-color: var(--border-color);
+        }
+        
+        .description-divider span {
+            padding: 0 1rem;
+        }
+        
+        .validation-container {
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background-color: var(--document-bg);
+            display: none;
+        }
+        
+        .validation-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .validation-title {
+            color: var(--jesa-blue);
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .validation-badge {
+            background-color: var(--jesa-orange);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .validation-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+            justify-content: flex-end;
+        }
+        
+        @media (max-width: 768px) {
+            .description-container {
+                flex-direction: column;
+            }
+            
+            .btn-group {
+                flex-wrap: wrap;
+            }
+            
+            .validation-actions {
+                flex-direction: column;
+            }
+        }
+        
+        .register-selector {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background-color: var(--document-bg);
+            display: none;
+        }
+        
+        .register-title {
+            color: var(--jesa-blue);
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+        
+        .register-options {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .register-option {
+            flex: 1;
+            min-width: 200px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .register-option:hover {
+            border-color: var(--jesa-blue);
+            box-shadow: 0 5px 15px rgba(0, 86, 179, 0.1);
+        }
+        
+        .register-option.selected {
+            border-color: var(--jesa-green);
+            background-color: rgba(40, 167, 69, 0.05);
+        }
+        
+        .register-option i {
+            font-size: 2.5rem;
+            color: var(--jesa-blue);
+            margin-bottom: 1rem;
+        }
+        
+        .register-option h4 {
+            color: var(--jesa-blue);
+            margin-bottom: 0.5rem;
+        }
+        
+        .register-option p {
+            font-size: 0.9rem;
+            color: var(--text-color);
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo-container">
+                <img src="https://afrimag.net/wp-content/uploads/2022/03/JESA-Logo-2048x480.png" alt="JESA Logo" class="logo">
+                <div class="project-title">Automatisation des Registres Légaux EIE</div>
+                <br>
+                
+                <div class="tooltip">
+                    <i class="fas fa-info-circle" style="color: var(--jesa-blue); font-size: 1.5rem;"></i>
+                    <span class="tooltiptext">Solution d'automatisation intelligente des registres légaux d'Études d'Impact Environnemental</span>
+                </div>
+            </div>
+            <div class="header-controls">
+                <div class="theme-toggle-container">
+                    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode">
+                    <i class="fas fa-moon"></i>
+                </button>
+                 </div>
+                
+            </div>
+        </header>
+        
+        <h1 class="main-title">Plateforme de Génération Automatisée des veilles réglementaires</h1>
+        
+        <div class="dashboard">
+            <!-- Project Description Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title"><i class="fas fa-project-diagram"></i> Description du Projet</h2>
+                    <span class="card-badge">EIE</span>
+                </div>
+                
+                <!-- Section de description avec texte et upload -->
+                <div class="description-container">
+                    <div class="description-text">
+                        <h3><i class="fas fa-keyboard"></i> Saisir la description</h3>
+                        <textarea class="text-area" id="project-description" placeholder="Décrivez votre projet environnemental (secteur, localisation, composantes techniques, durée, activités...)"></textarea>
+                    </div>
+                    
+                    <div class="description-upload">
+                        <h3><i class="fas fa-file-upload"></i> OU importer un fichier</h3>
+                        <div class="upload-area" id="description-upload-area">
+                            <i class="fas fa-file-word"></i>
+                            <i class="fas fa-file-pdf"></i>
+                            <p class="upload-text">Glissez-déposez ou cliquez pour importer</p>
+                            <p class="upload-text">Formats acceptés: DOC, DOCX, PDF</p>
+                            <button class="btn btn-secondary">Parcourir les fichiers</button>
+                            <p class="file-name" id="description-file-name"></p>
+                            <input type="file" id="description-file-input" class="hidden" accept=".doc,.docx,.pdf">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="description-divider">
+                    <span>OU</span>
+                </div>
+                
+                <div class="btn-group">
+                    <button class="btn btn-primary" id="pre-analyze-btn">
+                        <i class="fas fa-search"></i> Pré-Analyser
+                    </button>
+                </div>
+                
+                <div class="progress-container" id="progress-container">
+                    <div class="progress-bar" id="progress-bar"></div>
+                </div>
+                
+                <!-- Validation Container -->
+                <div class="validation-container" id="validation-container">
+                    <div class="validation-header">
+                        <h3 class="validation-title"><i class="fas fa-clipboard-check"></i> Résultats de Pré-Analyse</h3>
+                        <span class="validation-badge">À valider</span>
+                    </div>
+                    
+                    <div class="preview-container" id="preview-container">
+                        <!-- Pré-analyse content will be inserted here -->
+                    </div>
+                    
+                    <div class="validation-actions">
+                        <button class="btn btn-success" id="validate-btn">
+                            <i class="fas fa-check-circle"></i> Valider et continuer
+                        </button>
+                        <button class="btn btn-secondary" id="modify-btn">
+                            <i class="fas fa-edit"></i> Modifier la description
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Register Selector -->
+                <div class="register-selector" id="register-selector">
+                    <h3 class="register-title"><i class="fas fa-folder-open"></i> Sélectionnez le registre à générer</h3>
+                    <div class="register-options">
+                        <div class="register-option" data-register="legal">
+                            <i class="fas fa-balance-scale"></i>
+                            <h4>Legal Register</h4>
+                            <p>Registre des exigences légales et réglementaires applicables au projet</p>
+                        </div>
+                        <div class="register-option" data-register="commitment">
+                            <i class="fas fa-handshake"></i>
+                            <h4>Commitment Register</h4>
+                            <p>Registre des engagements pris par le maître d'ouvrage</p>
+                        </div>
+                        <div class="register-option" data-register="cadre">
+                            <i class="fas fa-book"></i>
+                            <h4>Cadre Réglementaire</h4>
+                            <p>Cadre réglementaire complet applicable au projet</p>
+                        </div>
+                    </div>
+                    
+                    <div class="btn-group" style="justify-content: center; margin-top: 1.5rem;">
+                        <button class="btn btn-primary" id="generate-btn">
+                            <i class="fas fa-file-word"></i> Générer Document
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="result-container" id="result-container">
+                    <h3 class="result-title">Document généré</h3>
+                    <div class="document-preview" id="document-preview">
+                        <!-- Document content will be inserted here -->
+                    </div>
+                    <div class="document-actions">
+                        <div class="document-action"><i class="fas fa-download"></i> Télécharger Word</div>
+                        <div class="document-action"><i class="fas fa-file-pdf"></i> Exporter PDF</div>
+                        <div class="document-action"><i class="fas fa-share-alt"></i> Partager</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Data Import Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title"><i class="fas fa-chart-line"></i> Analyse de Pollution</h2>
+                    <span class="card-badge">ADMS</span>
+                </div>
+                
+                <div class="upload-area" id="upload-area">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <p class="upload-text">Importer les résultats de simulation ADMS (CSV, Excel)</p>
+                    <button class="btn btn-secondary">Parcourir les fichiers</button>
+                    <p class="file-name" id="file-name"></p>
+                    <input type="file" id="file-input" class="hidden" accept=".csv, .xlsx, .xls">
+                </div>
+                
+                <div class="btn-group">
+                    <button class="btn btn-primary" id="process-btn">
+                        <i class="fas fa-cogs"></i> Traiter les Données
+                    </button>
+                    <button class="btn btn-secondary" id="import-btn">
+                        <i class="fas fa-file-import"></i> Générer Rapport
+                    </button>
+                </div>
+                
+                <div class="progress-container" id="pollution-progress">
+                    <div class="progress-bar" id="pollution-bar"></div>
+                </div>
+                
+                <div class="result-container" id="pollution-result">
+                    <h3 class="result-title">Rapport de Conformité</h3>
+                    <div class="document-preview" id="pollution-preview">
+                        <!-- Pollution analysis results will appear here -->
+                    </div>
+                    <div class="document-actions">
+                        <div class="document-action"><i class="fas fa-map-marked-alt"></i> Visualiser Carte</div>
+                        <div class="document-action"><i class="fas fa-download"></i> Télécharger</div>
+                        <div class="document-action"><i class="fas fa-bell"></i> Configurer Alertes</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>© 2025 JESA - Solution développée par Jawad BENALI & Amine NOUAR </p>
+        </footer>
+    </div>
+
+    <script>
+        // Fonction pour récupérer le token CSRF
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        
+        // Toggle dark/light mode
+        const themeToggle = document.getElementById('theme-toggle');
+        themeToggle.addEventListener('click', function() {
+            const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            
+            // Update the icon
+            const icon = this.querySelector('i');
+            icon.className = newTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+            
+            // Save preference to localStorage
+            localStorage.setItem('theme', newTheme);
+        });
+        
+        // Apply saved theme preference
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        const icon = themeToggle.querySelector('i');
+        icon.className = savedTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        
+        // File upload for project description
+        const descriptionUploadArea = document.getElementById('description-upload-area');
+        const descriptionFileInput = document.getElementById('description-file-input');
+        const descriptionFileName = document.getElementById('description-file-name');
+        
+        descriptionUploadArea.addEventListener('click', () => {
+            descriptionFileInput.click();
+        });
+        
+        descriptionFileInput.addEventListener('change', function() {
+            if (this.files.length) {
+                const file = this.files[0];
+                descriptionFileName.textContent = file.name;
+                descriptionFileName.style.display = 'block';
+                descriptionUploadArea.classList.add('active');
+                
+                // Optionally clear text area when a file is uploaded
+                document.getElementById('project-description').value = '';
+                
+                // Show success message
+                const successMsg = document.createElement('p');
+                successMsg.textContent = 'Fichier prêt pour analyse';
+                successMsg.style.color = 'var(--jesa-green)';
+                successMsg.style.marginTop = '10px';
+                descriptionUploadArea.appendChild(successMsg);
+                
+                // Remove message after 3 seconds
+                setTimeout(() => {
+                    successMsg.remove();
+                }, 3000);
+            }
+        });
+        
+        // Drag and drop functionality
+        descriptionUploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            descriptionUploadArea.classList.add('active');
+        });
+        
+        descriptionUploadArea.addEventListener('dragleave', () => {
+            descriptionUploadArea.classList.remove('active');
+        });
+        
+        descriptionUploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            descriptionUploadArea.classList.remove('active');
+            
+            if (e.dataTransfer.files.length) {
+                const file = e.dataTransfer.files[0];
+                
+                // Check file type
+                const validTypes = ['application/pdf', 'application/msword', 
+                                  'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+                
+                if (validTypes.includes(file.type)) {
+                    // Create a new FileList to assign to the input
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(file);
+                    descriptionFileInput.files = dataTransfer.files;
+                    
+                    // Trigger change event
+                    const event = new Event('change', { bubbles: true });
+                    descriptionFileInput.dispatchEvent(event);
+                } else {
+                    alert('Format de fichier non supporté. Veuillez utiliser un fichier PDF ou Word.');
+                }
+            }
+        });
+        
+        // File upload for pollution data
+        const uploadArea = document.getElementById('upload-area');
+        const fileInput = document.getElementById('file-input');
+        const fileName = document.getElementById('file-name');
+        
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+        
+        fileInput.addEventListener('change', function() {
+            if (this.files.length) {
+                const file = this.files[0];
+                fileName.textContent = file.name;
+                fileName.style.display = 'block';
+                uploadArea.classList.add('active');
+            }
+        });
+        
+        // Pre-Analyze button functionality - MODIFIED TO USE YOUR VIEW
+        document.getElementById('pre-analyze-btn').addEventListener('click', function() {
+            const description = document.getElementById('project-description').value;
+            const file = descriptionFileInput.files[0];
+            const csrftoken = getCookie('csrftoken');
+            
+            // Validate input
+            if (!description && !file) {
+                alert('Veuillez saisir une description du projet ou importer un fichier');
+                return;
+            }
+            
+            const progressBar = document.getElementById('progress-bar');
+            progressBar.style.width = '0%';
+            document.getElementById('progress-container').style.display = 'block';
+            
+            // Prepare form data
+            const formData = new FormData();
+            formData.append('project_description', description);
+            
+            if (file) {
+                formData.append('project_file', file);
+            }
+            
+            // Send request to Django view
+            fetch('/jesa_app/analyze_project/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Hide progress bar
+                document.getElementById('progress-container').style.display = 'none';
+                
+                // Show preview results
+                const previewContainer = document.getElementById('preview-container');
+                let htmlContent = '<h4>Résultats de l\'analyse</h4>';
+                
+                // Display all answers
+                for (const [question, answer] of Object.entries(data)) {
+                    htmlContent += `<p><strong>${question}:</strong> ${answer}</p>`;
+                }
+                
+                previewContainer.innerHTML = htmlContent;
+                
+                // Show validation container
+                document.getElementById('validation-container').style.display = 'block';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('progress-container').style.display = 'none';
+                alert('Une erreur est survenue lors de l\'analyse du projet.');
+            });
+        });
+        
+        // Validate button functionality
+        document.getElementById('validate-btn').addEventListener('click', function() {
+            // Hide validation container
+            document.getElementById('validation-container').style.display = 'none';
+            
+            // Show register selector
+            document.getElementById('register-selector').style.display = 'block';
+        });
+        
+        // Modify button functionality
+        document.getElementById('modify-btn').addEventListener('click', function() {
+            // Hide validation container
+            document.getElementById('validation-container').style.display = 'none';
+            
+            // Show text area and upload area
+            document.getElementById('project-description').focus();
+        });
+        
+        // Register selection functionality
+        document.querySelectorAll('.register-option').forEach(option => {
+            option.addEventListener('click', function() {
+                // Remove selected class from all options
+                document.querySelectorAll('.register-option').forEach(opt => {
+                    opt.classList.remove('selected');
+                });
+                
+                // Add selected class to clicked option
+                this.classList.add('selected');
+            });
+        });
+        
+        // Generate button functionality
+        document.getElementById('generate-btn').addEventListener('click', function() {
+            const selectedRegister = document.querySelector('.register-option.selected');
+            
+            if (!selectedRegister) {
+                alert('Veuillez sélectionner un type de registre à générer');
+                return;
+            }
+            
+            const registerType = selectedRegister.dataset.register;
+            let registerTitle = '';
+            
+            switch(registerType) {
+                case 'legal':
+                    registerTitle = 'Legal Register';
+                    break;
+                case 'commitment':
+                    registerTitle = 'Commitment Register';
+                    break;
+                case 'cadre':
+                    registerTitle = 'Cadre Réglementaire';
+                    break;
+            }
+            
+            // Hide register selector
+            document.getElementById('register-selector').style.display = 'none';
+            
+            // Show generated document
+            document.getElementById('document-preview').innerHTML = `
+                <h3>${registerTitle} - Projet Centrale Solaire</h3>
+                <p><strong>Date de génération:</strong> ${new Date().toLocaleDateString()}</p>
+                <p><strong>Référence:</strong> JESA-EIE-2023-001</p>
+                
+                <h4>Exigences légales applicables</h4>
+                <ul>
+                    <li>Loi 12-03 relative aux études d'impact sur l'environnement</li>
+                    <li>Décret 2-09-286 fixant les seuils des projets soumis à EIE</li>
+                    <li>Circulaire n°21/2010 relative aux centrales solaires</li>
+                    <li>Loi 28-00 relative à la gestion des déchets</li>
+                </ul>
+                
+                <h4>Engagements</h4>
+                <ul>
+                    <li>Mise en place d'un plan de gestion environnementale</li>
+                    <li>Suivi mensuel des indicateurs environnementaux</li>
+                    <li>Restauration du site en fin d'exploitation</li>
+                </ul>
+                
+                <h4>Conformité</h4>
+                <p>Le projet respecte l'ensemble des exigences légales applicables au secteur de l'énergie solaire.</p>
+            `;
+            
+            document.getElementById('result-container').style.display = 'block';
+        });
+        
+        // Process button functionality
+        document.getElementById('process-btn').addEventListener('click', function() {
+            if (!fileInput.files.length) {
+                alert('Veuillez importer un fichier de données ADMS');
+                return;
+            }
+            
+            const progressBar = document.getElementById('pollution-bar');
+            progressBar.style.width = '0%';
+            document.getElementById('pollution-progress').style.display = 'block';
+            
+            // Simulate processing
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 5;
+                progressBar.style.width = `${progress}%`;
+                
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    
+                    // Display results
+                    document.getElementById('pollution-preview').innerHTML = `
+                        <h4>Résultats de l'analyse de pollution</h4>
+                        <p>Niveaux de pollution détectés :</p>
+                        <ul>
+                            <li>CO2: 120 ppm (conforme)</li>
+                            <li>SO2: 35 ppm (limite atteinte)</li>
+                            <li>NOx: 28 ppm (conforme)</li>
+                        </ul>
+                        <p>Recommandation: Surveiller les niveaux de SO2</p>
+                    `;
+                    document.getElementById('pollution-result').style.display = 'block';
+                }
+            }, 100);
+        });
+        
+        // Import button functionality
+        document.getElementById('import-btn').addEventListener('click', function() {
+            alert('Fonctionnalité de génération de rapport activée!');
+        });
+    </script>
+</body>
+</html>
